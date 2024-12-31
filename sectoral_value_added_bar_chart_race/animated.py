@@ -79,7 +79,7 @@ def update(i):
     ax.tick_params(axis='x', labelsize=7)
     ax.tick_params(axis='y', labelsize=5, which='major', pad=10)
     ax.set_title(
-        'Evolving Economic Landscape of Hong Kong:\nNominal Value Added at Basic Price by Sector (1980 – 2022)',
+        'Evolving Economic Landscape of Hong Kong:\nNominal Value Added at Basic Price by Sector (1980 – 2023)',
         fontsize=10)
     y = df_rank_expanded.iloc[i]
     width = df_expanded.iloc[i]
