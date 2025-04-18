@@ -17,6 +17,59 @@ cache = Cache(app.server, config={
 # Cache timeout (in seconds)
 TIMEOUT = 60 * 60  # 1 hour
 
+# Define flag data for countries
+country_codes = {
+    'Argentina': 'ar',
+    'Australia': 'au',
+    'Austria': 'at',
+    'Belgium': 'be',
+    'Brazil': 'br',
+    'Bulgaria': 'bg',
+    'Canada': 'ca',
+    'Chile': 'cl',
+    'Colombia': 'co',
+    'Costa Rica': 'cr',
+    'Croatia': 'hr',
+    'Czechia': 'cz',
+    'Denmark': 'dk',
+    'Estonia': 'ee',
+    'Finland': 'fi',
+    'France': 'fr',
+    'Germany': 'de',
+    'Greece': 'gr',
+    'Hong Kong': 'hk',
+    'Hungary': 'hu',
+    'Iceland': 'is',
+    'Indonesia': 'id',
+    'Ireland': 'ie',
+    'Israel': 'il',
+    'Italy': 'it',
+    'Japan': 'jp',
+    'Korea': 'kr',
+    'Latvia': 'lv',
+    'Lithuania': 'lt',
+    'Luxembourg': 'lu',
+    'Mexico': 'mx',
+    'Netherlands': 'nl',
+    'New Zealand': 'nz',
+    'Norway': 'no',
+    'Peru': 'pe',
+    'Poland': 'pl',
+    'Portugal': 'pt',
+    'Romania': 'ro',
+    'Singapore': 'sg',
+    'Slovak Republic': 'sk',
+    'Slovenia': 'si',
+    'South Africa': 'za',
+    'Spain': 'es',
+    'Sweden': 'se',
+    'Switzerland': 'ch',
+    'Thailand': 'th',
+    'Turkiye': 'tr',
+    'United Kingdom': 'gb',
+    'United States': 'us'
+}
+
 # Define custom CSS
 app.index_string = '''
 <!DOCTYPE html>
@@ -61,6 +114,16 @@ app.index_string = '''
                 border-radius: 5px;
                 font-size: 0.9em;
                 color: #555;
+            }
+            .flag-option {
+                display: flex;
+                align-items: center;
+            }
+            .flag-image {
+                width: 20px;
+                height: 15px;
+                margin-right: 10px;
+                vertical-align: middle;
             }
         </style>
     </head>
@@ -140,7 +203,35 @@ def populate_dropdowns(_):
     
     # Get unique countries (sorted alphabetically)
     countries = sorted(df['Reference area'].unique())
-    country_options = [{'label': country, 'value': country} for country in countries]
+
+    # Create country options with flags
+    country_options = []
+
+    for country in countries:
+        country_code = country_codes.get(country, '').lower()
+        
+        if country_code:
+            # Use flag from assets folder
+            flag_path = f'/assets/flags/{country_code}.png'
+            country_options.append({
+                'label': html.Div([
+                    html.Img(src=flag_path, className='flag-image'),
+                    html.Span(country)
+                ], className='flag-option'),
+                'value': country
+            })
+        else:
+            country_options.append({'label': country, 'value': country})
+    
+    # Create a custom dropdown component
+    country_dropdown = dcc.Dropdown(
+        id='country-select',
+        options=country_options,
+        placeholder="Please select an economy",
+        optionHeight=40  # Taller options to accommodate flags
+    )
+
+    #country_options = [{'label': country, 'value': country} for country in countries]
     
     # Get unique domains (sorted by DOMAIN value)
     domains = df[['DOMAIN', 'Domain']].drop_duplicates()
@@ -880,4 +971,4 @@ def create_chart_component(label, measure, breakdown_type, total_data, breakdown
     return dcc.Graph(figure=fig, config={'displayModeBar': False})
 
 if __name__ == '__main__':
-    app.run_server(debug=False)
+    app.run_server(debug=True)
