@@ -179,7 +179,7 @@ app.layout = html.Div([
                   href="https://data-explorer.oecd.org/vis?fs[0]=Topic%2C1%7CSociety%23SOC%23%7CWell-being%20and%20beyond%20GDP%23SOC_WEL%23&pg=0&fc=Topic&bp=true&snb=26&df[ds]=dsDisseminateFinalDMZ&df[id]=DSD_HSL%40DF_HSL_CWB&df[ag]=OECD.WISE.WDP&df[vs]=1.1&dq=......&pd=%2C&to[TIME_PERIOD]=false",
                   target="_blank")
         ]),
-        html.P("For Hong Kong, data is obtained or derived from websites of various government departments and tertiary institutes."),
+        html.P("For Hong Kong and Singapore, data is obtained or derived from websites of various government departments and tertiary institutes."),
         html.P("Data sources have different geographical coverage and data collection periods, so please make comparisons with caution.")
     ], className="notes-section"),
     
