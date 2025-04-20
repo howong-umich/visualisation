@@ -174,7 +174,7 @@ app.layout = html.Div([
     # Add notes section
     html.Div([
         html.P([
-            "Data source for economies other than Hong Kong: ",
+            "Data source for economies other than Hong Kong and Singapore: ",
             html.A("OECD Data Explorer", 
                   href="https://data-explorer.oecd.org/vis?fs[0]=Topic%2C1%7CSociety%23SOC%23%7CWell-being%20and%20beyond%20GDP%23SOC_WEL%23&pg=0&fc=Topic&bp=true&snb=26&df[ds]=dsDisseminateFinalDMZ&df[id]=DSD_HSL%40DF_HSL_CWB&df[ag]=OECD.WISE.WDP&df[vs]=1.1&dq=......&pd=%2C&to[TIME_PERIOD]=false",
                   target="_blank")
@@ -971,4 +971,4 @@ def create_chart_component(label, measure, breakdown_type, total_data, breakdown
     return dcc.Graph(figure=fig, config={'displayModeBar': False})
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=False)
