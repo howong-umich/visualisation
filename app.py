@@ -409,6 +409,27 @@ def create_international_comparison(df, selected_country, selected_domain):
             if earliest_year_info['comparison_count'] < 2 and latest_year_info['comparison_count'] < 2:
                 continue
             
+            # Find the combined range for x-axis to standardize between charts
+            combined_x_range = None
+            if earliest_year_info['comparison_count'] >= 2 and latest_year_info['comparison_count'] >= 2 and earliest_year_info['year'] != latest_year_info['year']:
+                # Get data for earliest year
+                earliest_year_data = total_data[total_data['TIME_PERIOD'] == earliest_year_info['year']]
+                earliest_min = earliest_year_data['OBS_VALUE'].min()
+                earliest_max = earliest_year_data['OBS_VALUE'].max()
+                
+                # Get data for latest year
+                latest_year_data = total_data[total_data['TIME_PERIOD'] == latest_year_info['year']]
+                latest_min = latest_year_data['OBS_VALUE'].min()
+                latest_max = latest_year_data['OBS_VALUE'].max()
+                
+                # Find overall min and max
+                overall_min = min(earliest_min, latest_min)
+                overall_max = max(earliest_max, latest_max)
+                
+                # Add some padding (10%)
+                padding = (overall_max - overall_min) * 0.1
+                combined_x_range = [overall_min - padding, overall_max + padding]
+            
             # Create a container for this measure's charts
             measure_container = html.Div(
                 style={
@@ -446,7 +467,8 @@ def create_international_comparison(df, selected_country, selected_domain):
                 if earliest_year_info['comparison_count'] >= 2:
                     earliest_chart = create_comparison_chart(total_data, selected_country, 
                                                             measure_label, measure_name, 
-                                                            earliest_year_info, unit_of_measure)
+                                                            earliest_year_info, unit_of_measure,
+                                                            x_range=combined_x_range)
                     
                     chart_divs.append(
                         html.Div(earliest_chart, 
@@ -459,7 +481,8 @@ def create_international_comparison(df, selected_country, selected_domain):
                 if latest_year_info['comparison_count'] >= 2:
                     latest_chart = create_comparison_chart(total_data, selected_country, 
                                                           measure_label, measure_name, 
-                                                          latest_year_info, unit_of_measure)
+                                                          latest_year_info, unit_of_measure,
+                                                          x_range=combined_x_range)
                     
                     chart_divs.append(
                         html.Div(latest_chart, 
@@ -506,6 +529,27 @@ def create_sex_specific_comparison(measure_data, selected_country, label, sex_di
     if earliest_year_info['comparison_count'] < 2 and latest_year_info['comparison_count'] < 2:
         return None
     
+    # Find the combined range for x-axis to standardize between charts
+    combined_x_range = None
+    if earliest_year_info['comparison_count'] >= 2 and latest_year_info['comparison_count'] >= 2 and earliest_year_info['year'] != latest_year_info['year']:
+        # Get data for earliest year
+        earliest_year_data = sex_data[sex_data['TIME_PERIOD'] == earliest_year_info['year']]
+        earliest_min = earliest_year_data['OBS_VALUE'].min()
+        earliest_max = earliest_year_data['OBS_VALUE'].max()
+        
+        # Get data for latest year
+        latest_year_data = sex_data[sex_data['TIME_PERIOD'] == latest_year_info['year']]
+        latest_min = latest_year_data['OBS_VALUE'].min()
+        latest_max = latest_year_data['OBS_VALUE'].max()
+        
+        # Find overall min and max
+        overall_min = min(earliest_min, latest_min)
+        overall_max = max(earliest_max, latest_max)
+        
+        # Add some padding (10%)
+        padding = (overall_max - overall_min) * 0.1
+        combined_x_range = [overall_min - padding, overall_max + padding]
+    
     # Create a container for this measure's charts
     measure_container = html.Div(
         style={
@@ -543,7 +587,8 @@ def create_sex_specific_comparison(measure_data, selected_country, label, sex_di
         if earliest_year_info['comparison_count'] >= 2:
             earliest_chart = create_comparison_chart(sex_data, selected_country, 
                                                     label, sex_display, 
-                                                    earliest_year_info, unit_of_measure)
+                                                    earliest_year_info, unit_of_measure,
+                                                    x_range=combined_x_range)
             
             chart_divs.append(
                 html.Div(earliest_chart, 
@@ -556,7 +601,8 @@ def create_sex_specific_comparison(measure_data, selected_country, label, sex_di
         if latest_year_info['comparison_count'] >= 2:
             latest_chart = create_comparison_chart(sex_data, selected_country, 
                                                   label, sex_display, 
-                                                  latest_year_info, unit_of_measure)
+                                                  latest_year_info, unit_of_measure,
+                                                  x_range=combined_x_range)
             
             chart_divs.append(
                 html.Div(latest_chart, 
@@ -642,7 +688,7 @@ def find_comparable_year(measure_data, selected_country, year_type):
     
     return year_info
 
-def create_comparison_chart(measure_data, selected_country, label, measure, year_info, unit_of_measure):
+def create_comparison_chart(measure_data, selected_country, label, measure, year_info, unit_of_measure, x_range=None):
     """Create a horizontal bar chart for international comparison for the selected country's earliest/latest year"""
     target_year = year_info['year']
     year_type = year_info['type']
@@ -698,7 +744,7 @@ def create_comparison_chart(measure_data, selected_country, label, measure, year
             showlegend=False,
             hovertemplate=
             '<b>%{y}</b><br>' +
-            'Value: %{x}<br>' +
+            'Value: %{x:.2f}<br>' +  # Added formatting to show 2 decimal places
             'Year: ' + str(row['Year']) +
             '<extra></extra>'
         ))
@@ -772,8 +818,8 @@ def create_comparison_chart(measure_data, selected_country, label, measure, year
     top_margin = 60 + (13 * title_lines)  # Reduced from 80+(20*lines) to 60+(15*lines)
     
     # Add layout with slightly larger font size for title and reduced spacing
-    fig.update_layout(
-        title={
+    layout_updates = {
+        'title': {
             'text': full_title,
             'y': 0.97,  # Moved up slightly from 0.97 to 0.98
             'x': 0.5,
@@ -781,28 +827,34 @@ def create_comparison_chart(measure_data, selected_country, label, measure, year
             'yanchor': 'top',
             'font': {'family': 'Arial', 'size': 18} 
         },
-        xaxis=dict(
+        'xaxis': dict(
             title=unit_of_measure,
             titlefont={'family': 'Arial'},
             domain=[0, 1],  # Ensure x-axis takes full width
             automargin=True  # Auto-adjust margins if needed
         ),
-        yaxis=dict(
+        'yaxis': dict(
             title='',  # No title for y-axis (countries)
             autorange="reversed",  # Reverse to have highest value at top
             titlefont={'family': 'Arial'},
             automargin=True  # Auto-adjust margins if needed
         ),
-        margin=dict(l=120, r=30, t=top_margin, b=50),
-        height=chart_height,
-        font={'family': 'Arial'},
+        'margin': dict(l=120, r=30, t=top_margin, b=50),
+        'height': chart_height,
+        'font': {'family': 'Arial'},
         # Reduce padding between elements
-        bargap=0.15,  # Reduced from default
-        plot_bgcolor='white',
+        'bargap': 0.15,  # Reduced from default
+        'plot_bgcolor': 'white',
         
         # Add more space for the chart content by adjusting the layout
-        autosize=True
-    )
+        'autosize': True
+    }
+    
+    # If an x-range is provided, use it (for consistent scale between charts)
+    if x_range is not None:
+        layout_updates['xaxis']['range'] = x_range
+    
+    fig.update_layout(**layout_updates)
     
     return dcc.Graph(figure=fig, config={'displayModeBar': False, 'responsive': True})
 
